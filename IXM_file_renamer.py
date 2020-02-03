@@ -1,5 +1,6 @@
 ''' This interface sends Unix commands to run folder restructuring.'''
 
+from __future__ import print_function
 import argparse
 import os
 import utils
@@ -8,32 +9,64 @@ from datetime import datetime
 
 # A Function to convert from IXM timepoint based subfolder to well subfolder
 def timepoint_to_well(input_path):
-    # valid_wells = var_dict['Wells']
-    # valid_timepoints = var_dict['TimePoints']
+
     date = []
     date_format = []
+    all_src_images = []
 
     print("The input path is: ", input_path)
-    date = str(input_path.split('/')[-3])
-    date_format = ''.join(date.split('-'))
-    print("date format is: ", date_format)
-    PID_date = 'PID' + date_format + '_'
-    print("The experiment id is: ", PID_date)
-    list_all_files = os.listdir(input_path)
+    for dir in os.walk(input_path, topdown=True):
+        # print("We are walking in: ", dir)
+
+        for name in dir[1:]:
+            # print("the name is: ", name)
+            # path = os.path.join(input_path, dir[])
+            # print("The path is: ", path)
+            if str(name).find('TimePoint') > 0:
+                print("the name is: ", name)
+                print("We are in: ", dir[0])
+                print (" The sub directory name is: ", name[0])
+
+                path = os.path.join(input_path, dir[0], name[0])
+                print("The path is: ", path)
+
+            if str(name).find('.tif') > 0:
+                # str(name).find('*'+'.tif') > 0
+                print("tif file found!")
+                all_src_images = utils.make_filelist_wells(path, 's')
+                
+            # else:
+            #     continue
+
+    print ("the all source images are: ", all_src_images)
+    # date = str(input_path.split('/')[-3])
+    # date_format = ''.join(date.split('-'))
+    # print("date format is: ", date_format)
+    # PID_date = 'PID' + date_format + '_'
+    # print("The experiment id is: ", PID_date)
+    # list_all_files = os.listdir(input_path)
     # print("List of all files are: ", list_all_files)
 
     # TODO: add PID_date to beginning of the file names
-    for file in list_all_files:
+    # for file in list_all_files:
+    #
+    #     new_file_name = PID_date + file
+    #     print("new file name is: ", new_file_name)
+    #     source = os.path.join(input_path, file)
+    #     destination = os.path.join(input_path, new_file_name)
+    #     # os.rename(source, destination)
 
-        new_file_name = PID_date + file
-        print("new file name is: ", new_file_name)
-        source = os.path.join(input_path, file)
-        destination = os.path.join(input_path, new_file_name)
-        os.rename(source, destination)
+    ixm_name = 'LBCP191204-DNDA10_A05_s1_w277FB402F-217D-4F57-A0FF-D8C516901226.tif'
+    robo3_name_check = 'PIDdate_ExptName_Timepoint_Hours-BurstIndex_Well_MontageNumber_Channel_TimeIncrement_DepthIndex_DepthIncrement.tif'
+    list_ixm_tokens = ixm_name.split('_')
+    map3x3 = {'s1':'1', 's2':'2', 's3':'3', 's4':'6', 's5':'5', 's6':'4', 's7':'7', 's8':'8', 's9':'9'}
+    robo3_generated = '_'.join(['PIDdate', list_ixm_tokens[0], list_ixm_tokens[-1].split('.')[0], '0-0',
+                                list_ixm_tokens[1], map3x3[list_ixm_tokens[2]], list_ixm_tokens[3][0:2], '0', '0',
+                                '0.tif'])
+    print("Robo3 file format: ", robo3_generated)
 
-
-    plate_id = utils.get_plate_id(list_all_files)
-    print("Plate IDs are: ", plate_id)
+    # plate_id = utils.get_plate_id(list_all_files)
+    # print("Plate IDs are: ", plate_id)
     # for well in valid_wells:
     #     print("we are on well: ", well)
     #     for timepoint in valid_timepoints:
@@ -69,8 +102,6 @@ if __name__ == '__main__':
     # ----Initialize parameters------------------
     INPUT_PATH = args.input_path
     print("The input path is: ", INPUT_PATH)
-    current_structure = args.current_structure
-    print("The folder structure we got currently: ", current_structure)
     new_structure = args.new_structure
     print("The new folder structure is: ", new_structure)
     OUTPUT_PATH = args.output_path
