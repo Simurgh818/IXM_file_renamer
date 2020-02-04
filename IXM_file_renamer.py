@@ -8,6 +8,19 @@ import shutil
 from datetime import datetime
 
 
+def montage_mapper(list_ixm_tokens, NxN):
+
+    tile_number = 0
+    map3x3 = {'s1':'1', 's2':'2', 's3':'3', 's4':'6', 's5':'5', 's6':'4', 's7':'7', 's8':'8', 's9':'9'}
+    map4x4 = {'s1':'1', 's2':'2', 's3':'3', 's4':'4', 's5':'8', 's6':'7', 's7':'6', 's8':'5', 's9':'9',
+              's10':'10', 's11':'11', 's12':'12', 's13':'16', 's14':'15', 's15':'14', 's16':'13'}
+    if NxN == 4:
+        tile_number = map4x4[list_ixm_tokens[2]]
+    elif NxN == 3:
+        tile_number = map3x3[list_ixm_tokens[2]]
+    return tile_number
+
+
 # A Function to convert from IXM timepoint based subfolder to well subfolder
 def timepoint_to_well(input_path, output_path):
     """    Robo0: PIDdate_ExptName_Timepoint_Hours
@@ -24,11 +37,11 @@ def timepoint_to_well(input_path, output_path):
         # print("We are walking in: ", dir)
 
         for name in dir[1:]:
-            print("the name is: ", name)
+            # print("the name is: ", name)
             # path = os.path.join(input_path, dir[])
             # print("The path is: ", path)
             if str(name).find('TimePoint') > 0:
-                print("the name is: ", name)
+                # print("the name is: ", name)
                 print("We are in: ", dir[0])
                 print (" The sub directory name is: ", name[0])
 
@@ -62,9 +75,16 @@ def timepoint_to_well(input_path, output_path):
     # print("List of all files are: ", list_all_files_base)
 
     all_dest_images = []
-    map3x3 = {'s1':'1', 's2':'2', 's3':'3', 's4':'6', 's5':'5', 's6':'4', 's7':'7', 's8':'8', 's9':'9'}
-    map4x4 = {'s1':'1', 's2':'2', 's3':'3', 's4':'4', 's5':'8', 's6':'7', 's7':'6', 's8':'5', 's9':'9',
-              's10':'10', 's11':'11', 's12':'12', 's13':'16', 's14':'15', 's15':'14', 's16':'13'}
+    NxN = []
+    tiles = [all_src_images[i].split('/')[-1].split('_')[2].split('s')[1] for i in range(0, len(all_src_images))]
+    tiles_int = [int(x) for x in tiles]
+    print("The tiles are: ", tiles_int)
+    max_tile = max(tiles_int)
+    print("max tile is: ", max_tile)
+    if max_tile == 16:
+        NxN = 4
+    elif max_tile == 9:
+        NxN = 3
 
     for file in all_src_images:
 
@@ -76,9 +96,10 @@ def timepoint_to_well(input_path, output_path):
         utils.create_dir(output_path_expt_well)
         channel = list_ixm_tokens[-1].split('.')[0].split('-')[0]
         # print("list_ixm_tokens for the files are: ", list_ixm_tokens)
+        tile_number = montage_mapper(list_ixm_tokens, NxN)
         new_file_name = os.path.join(output_path_expt_well, '_'.join([PID_date, list_ixm_tokens[0], time_point,
                                                                       '0-0', list_ixm_tokens[1],
-                                                                      map4x4[list_ixm_tokens[2]], channel, '0',
+                                                                      tile_number, channel, '0',
                                                                       '0', '0.tif']))
         all_dest_images.append(new_file_name)
         shutil.copy(file, new_file_name)
