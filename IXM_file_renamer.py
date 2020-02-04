@@ -33,7 +33,6 @@ def timepoint_to_well(input_path, output_path):
                 path = os.path.join(input_path, dir[0], name[0])
                 print("The path is: ", path)
             if str(name).find(".DS_Store") > 0:
-                # list(name).index(".DS_Store")
                 thumb_path = os.path.join(input_path, dir[0], name[4])
                 print("thumbnail file found at:", thumb_path)
                 # list(name).pop(4)
@@ -45,20 +44,17 @@ def timepoint_to_well(input_path, output_path):
                 print("tif file found!")
                 all_src_images = utils.make_filelist_wells(path, 's')
 
-            # else:
-            #     continue
-
     print ("the all source images are: ", all_src_images)
     base_path = os.path.basename(all_src_images[0])
     print("base path is: ", base_path)
     date = str(path.split('/')[-3])
     date_format = ''.join(date.split('-'))
-    print("date format is: ", date_format)
+    # print("date format is: ", date_format)
     PID_date = 'PID' + date_format
-    print("The experiment id is: ", PID_date)
+    # print("The experiment id is: ", PID_date)
     # TODO: time point
     time_point = 'T' + str(path.split('/')[-1]).split('_')[1]
-    print("The time point is: ", time_point)
+    # print("The time point is: ", time_point)
 
     # list_all_files_base = os.path.basename(all_src_images[:])
     # print("List of all files are: ", list_all_files_base)
@@ -68,21 +64,24 @@ def timepoint_to_well(input_path, output_path):
     map4x4 = {'s1':'1', 's2':'2', 's3':'3', 's4':'4', 's5':'8', 's6':'7', 's7':'6', 's8':'5', 's9':'9',
               's10':'10', 's11':'11', 's12':'12', 's13':'16', 's14':'15', 's15':'14', 's16':'13'}
 
-    # TODO: add PID_date to beginning of the file names
-    output_path_time = os.path.join(output_path, time_point)
-    utils.create_dir(output_path_time)
     for file in all_src_images:
 
         original_file_name = os.path.basename(file)
         list_ixm_tokens = original_file_name.split('_')
+        output_path_expt = os.path.join(output_path, list_ixm_tokens[0])
+        utils.create_dir(output_path_expt)
+        output_path_expt_well = os.path.join(output_path_expt, list_ixm_tokens[1])
+        utils.create_dir(output_path_expt_well)
         # print("list_ixm_tokens for the files are: ", list_ixm_tokens)
-        new_file_name = os.path.join(output_path_time, '_'.join([PID_date, list_ixm_tokens[0], time_point, '0-0',
-                                                     list_ixm_tokens[1], map4x4[list_ixm_tokens[2]],
-                                                     list_ixm_tokens[-1].split('.')[0], '0', '0', '0.tif']))
+        new_file_name = os.path.join(output_path_expt_well, '_'.join([PID_date, list_ixm_tokens[0], time_point,
+                                                                      '0-0', list_ixm_tokens[1],
+                                                                      map4x4[list_ixm_tokens[2]],
+                                                                      list_ixm_tokens[-1].split('.')[0], '0',
+                                                                      '0', '0.tif']))
         all_dest_images.append(new_file_name)
         shutil.copy(file, new_file_name)
-
-    # print("The new name is: ", all_dest_images)
+    
+    print("The new name is: ", all_dest_images)
 
     return
 
