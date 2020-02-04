@@ -21,14 +21,9 @@ def montage_mapper(list_ixm_tokens, NxN):
     return tile_number
 
 
-# A Function to convert from IXM timepoint based subfolder to well subfolder
-def timepoint_to_well(input_path, output_path):
-    """    Robo0: PIDdate_ExptName_Timepoint_Hours
-    -BurstIndex_Well_MontageNumber_Channel_TimeIncrement_DepthIndex_DepthIncrement.tif
-    """
-    date = []
-    date_format = []
+def path_generator(input_path, output_path):
     all_src_images = []
+    output_path_expt_well = []
 
     print("The input path is: ", input_path)
     for dir in os.walk(input_path, topdown=True):
@@ -45,8 +40,8 @@ def timepoint_to_well(input_path, output_path):
                 print("We are in: ", dir[0])
                 print (" The sub directory name is: ", name[0])
 
-                path = os.path.join(input_path, dir[0], name[0])
-                print("The path is: ", path)
+                source_path = os.path.join(input_path, dir[0], name[0])
+                print("The path is: ", source_path)
             if str(name).find(".DS_Store") > 0:
                 thumb_path = os.path.join(input_path, dir[0], name[4])
                 print("thumbnail file found at:", thumb_path)
@@ -57,19 +52,38 @@ def timepoint_to_well(input_path, output_path):
             if str(name).find('.tif') > 0:
                 # str(name).find('*'+'.tif') > 0
                 print("tif file found!")
-                all_src_images = utils.make_filelist_wells(path, 's')
+                all_src_images = utils.make_filelist_wells(source_path, 's')
+
+    original_file_name = os.path.basename(all_src_images[0])
+    list_ixm_tokens = original_file_name.split('_')
+    output_path_expt = os.path.join(output_path, list_ixm_tokens[0])
+    utils.create_dir(output_path_expt)
+    output_path_expt_well = os.path.join(output_path_expt, list_ixm_tokens[1])
+    utils.create_dir(output_path_expt_well)
+
+    return all_src_images, output_path_expt_well
+
+
+# A Function to convert from IXM timepoint based subfolder to well subfolder
+def timepoint_to_well(input_path, output_path):
+    """    Robo0: PIDdate_ExptName_Timepoint_Hours
+    -BurstIndex_Well_MontageNumber_Channel_TimeIncrement_DepthIndex_DepthIncrement.tif
+    """
+    date = []
+    date_format = []
+    all_src_images, output_path_expt_well = path_generator(input_path, output_path)
 
     print ("the all source images are: ", all_src_images)
     base_path = os.path.basename(all_src_images[0])
     print("base path is: ", base_path)
-    date = str(path.split('/')[-3])
+    date = str(all_src_images[0].split('/')[-3])
     date_format = ''.join(date.split('-'))
     # print("date format is: ", date_format)
     PID_date = 'PID' + date_format
     # print("The experiment id is: ", PID_date)
     # TODO: time point
-    time_point = 'T' + str(path.split('/')[-1]).split('_')[1]
-    # print("The time point is: ", time_point)
+    time_point = 'T' + str(all_src_images[0].split('/')[-2]).split('_')[1]
+    print("The time point is: ", time_point)
 
     # list_all_files_base = os.path.basename(all_src_images[:])
     # print("List of all files are: ", list_all_files_base)
@@ -78,22 +92,17 @@ def timepoint_to_well(input_path, output_path):
     NxN = []
     tiles = [all_src_images[i].split('/')[-1].split('_')[2].split('s')[1] for i in range(0, len(all_src_images))]
     tiles_int = [int(x) for x in tiles]
-    print("The tiles are: ", tiles_int)
+    # print("The tiles are: ", tiles_int)
     max_tile = max(tiles_int)
-    print("max tile is: ", max_tile)
+    # print("max tile is: ", max_tile)
     if max_tile == 16:
         NxN = 4
     elif max_tile == 9:
         NxN = 3
 
     for file in all_src_images:
-
         original_file_name = os.path.basename(file)
         list_ixm_tokens = original_file_name.split('_')
-        output_path_expt = os.path.join(output_path, list_ixm_tokens[0])
-        utils.create_dir(output_path_expt)
-        output_path_expt_well = os.path.join(output_path_expt, list_ixm_tokens[1])
-        utils.create_dir(output_path_expt_well)
         channel = list_ixm_tokens[-1].split('.')[0].split('-')[0]
         # print("list_ixm_tokens for the files are: ", list_ixm_tokens)
         tile_number = montage_mapper(list_ixm_tokens, NxN)
