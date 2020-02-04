@@ -19,10 +19,12 @@ def timepoint_to_well(input_path, output_path):
 
     print("The input path is: ", input_path)
     for dir in os.walk(input_path, topdown=True):
+        # import pprint
+        # pprint.pprint(dir)
         # print("We are walking in: ", dir)
 
         for name in dir[1:]:
-            # print("the name is: ", name)
+            print("the name is: ", name)
             # path = os.path.join(input_path, dir[])
             # print("The path is: ", path)
             if str(name).find('TimePoint') > 0:
@@ -72,15 +74,15 @@ def timepoint_to_well(input_path, output_path):
         utils.create_dir(output_path_expt)
         output_path_expt_well = os.path.join(output_path_expt, list_ixm_tokens[1])
         utils.create_dir(output_path_expt_well)
+        channel = list_ixm_tokens[-1].split('.')[0].split('-')[0]
         # print("list_ixm_tokens for the files are: ", list_ixm_tokens)
         new_file_name = os.path.join(output_path_expt_well, '_'.join([PID_date, list_ixm_tokens[0], time_point,
                                                                       '0-0', list_ixm_tokens[1],
-                                                                      map4x4[list_ixm_tokens[2]],
-                                                                      list_ixm_tokens[-1].split('.')[0], '0',
+                                                                      map4x4[list_ixm_tokens[2]], channel, '0',
                                                                       '0', '0.tif']))
         all_dest_images.append(new_file_name)
         shutil.copy(file, new_file_name)
-    
+
     print("The new name is: ", all_dest_images)
 
     return
@@ -92,8 +94,7 @@ def main():
 
     """
 
-    if new_structure == 'to_robo0':
-        timepoint_to_well(INPUT_PATH, OUTPUT_PATH)
+    timepoint_to_well(INPUT_PATH, OUTPUT_PATH)
 
     return
 
@@ -104,7 +105,6 @@ if __name__ == '__main__':
     # ----Parser-----------------------
     parser = argparse.ArgumentParser(description="Folder Restructuring.")
     parser.add_argument("input_path", help="The path to parent folder.")
-    parser.add_argument("new_structure", help="The new structure you would like to change to.")
     parser.add_argument("output_path", help="Output path for the new folder structure.")
 
     args = parser.parse_args()
@@ -112,8 +112,6 @@ if __name__ == '__main__':
     # ----Initialize parameters------------------
     INPUT_PATH = args.input_path
     print("The input path is: ", INPUT_PATH)
-    new_structure = args.new_structure
-    print("The new folder structure is: ", new_structure)
     OUTPUT_PATH = args.output_path
     print("The output path is: ", OUTPUT_PATH)
 
