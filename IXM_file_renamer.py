@@ -4,12 +4,15 @@ from __future__ import print_function
 import argparse
 import os
 import utils
+import shutil
 from datetime import datetime
 
 
 # A Function to convert from IXM timepoint based subfolder to well subfolder
-def timepoint_to_well(input_path):
-
+def timepoint_to_well(input_path, output_path):
+    """    Robo0: PIDdate_ExptName_Timepoint_Hours
+    -BurstIndex_Well_MontageNumber_Channel_TimeIncrement_DepthIndex_DepthIncrement.tif
+    """
     date = []
     date_format = []
     all_src_images = []
@@ -51,40 +54,38 @@ def timepoint_to_well(input_path):
     date = str(path.split('/')[-3])
     date_format = ''.join(date.split('-'))
     print("date format is: ", date_format)
-    PID_date = 'PID' + date_format + '_'
+    PID_date = 'PID' + date_format
     print("The experiment id is: ", PID_date)
+    # TODO: time point
+    time_point = 'T' + str(path.split('/')[-1]).split('_')[1]
+    print("The time point is: ", time_point)
+
     # list_all_files_base = os.path.basename(all_src_images[:])
     # print("List of all files are: ", list_all_files_base)
 
+    all_dest_images = []
+    map3x3 = {'s1':'1', 's2':'2', 's3':'3', 's4':'6', 's5':'5', 's6':'4', 's7':'7', 's8':'8', 's9':'9'}
+    map4x4 = {'s1':'1', 's2':'2', 's3':'3', 's4':'4', 's5':'8', 's6':'7', 's7':'6', 's8':'5', 's9':'9',
+              's10':'10', 's11':'11', 's12':'12', 's13':'16', 's14':'15', 's15':'14', 's16':'13'}
+
     # TODO: add PID_date to beginning of the file names
+    output_path_time = os.path.join(output_path, time_point)
+    utils.create_dir(output_path_time)
     for file in all_src_images:
 
-        new_file_name = os.path.basename(file)
-        list_ixm_tokens = new_file_name.split('_')
-        print("list_ixm_tokens for the files are: ", list_ixm_tokens)
-    #     source = os.path.join(input_path, file)
-    #     destination = os.path.join(input_path, new_file_name)
-    #     # os.rename(source, destination)
+        original_file_name = os.path.basename(file)
+        list_ixm_tokens = original_file_name.split('_')
+        # print("list_ixm_tokens for the files are: ", list_ixm_tokens)
+        new_file_name = os.path.join(output_path_time, '_'.join([PID_date, list_ixm_tokens[0], time_point, '0-0',
+                                                     list_ixm_tokens[1], map4x4[list_ixm_tokens[2]],
+                                                     list_ixm_tokens[-1].split('.')[0], '0', '0', '0.tif']))
+        all_dest_images.append(new_file_name)
+        shutil.copy(file, new_file_name)
 
-    ixm_name = 'LBCP191204-DNDA10_A05_s1_w277FB402F-217D-4F57-A0FF-D8C516901226.tif'
-    robo3_name_check = 'PIDdate_ExptName_Timepoint_Hours-BurstIndex_Well_MontageNumber_Channel_TimeIncrement_DepthIndex_DepthIncrement.tif'
-    list_ixm_tokens = ixm_name.split('_')
-    map3x3 = {'s1':'1', 's2':'2', 's3':'3', 's4':'6', 's5':'5', 's6':'4', 's7':'7', 's8':'8', 's9':'9'}
-    robo3_generated = '_'.join([PID_date, list_ixm_tokens[0], list_ixm_tokens[-1].split('.')[0], '0-0',
-                                list_ixm_tokens[1], map3x3[list_ixm_tokens[2]], list_ixm_tokens[3][0:2], '0', '0',
-                                '0.tif'])
-    print("Robo3 file format: ", robo3_generated)
-
-    # plate_id = utils.get_plate_id(list_all_files)
-    # print("Plate IDs are: ", plate_id)
-    # for well in valid_wells:
-    #     print("we are on well: ", well)
-    #     for timepoint in valid_timepoints:
-    #         image_stack_list = utils.make_filelist(input_path, well)
-    #
-    #     print("the image_stack_list is: ", image_stack_list)
+    # print("The new name is: ", all_dest_images)
 
     return
+
 
 def main():
     """
@@ -93,7 +94,7 @@ def main():
     """
 
     if new_structure == 'to_robo0':
-        timepoint_to_well(INPUT_PATH)
+        timepoint_to_well(INPUT_PATH, OUTPUT_PATH)
 
     return
 
