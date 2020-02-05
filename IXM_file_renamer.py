@@ -21,10 +21,6 @@ def montage_mapper(list_ixm_tokens, NxN):
 
 
 def path_generator(input_path, output_path):
-    all_src_images = []
-    all_src_images2 = []
-    output_path_expt_well = []
-
     print("The input path is: ", input_path)
 
     for dir in os.walk(input_path, topdown=True):
@@ -97,8 +93,36 @@ def time_point_generator(all_src_images):
     # TODO: time point
     time_point = 'T' + str(all_src_images[0].split('/')[-2]).split('_')[1]
     print("The time point is: ", time_point)
+    NxN = []
+    tiles = [all_src_images[i].split('/')[-1].split('_')[2].split('s')[1] for i in range(0, len(all_src_images))]
+    tiles_int = [int(x) for x in tiles]
+    # print("The tiles are: ", tiles_int)
+    max_tile = max(tiles_int)
+    # print("max tile is: ", max_tile)
+    if max_tile == 16:
+        NxN = 4
+    elif max_tile == 9:
+        NxN = 3
 
-    return time_point, pid_date
+    return time_point, pid_date, NxN
+
+
+def rename_ixm(all_src_images, output_path_expt_well, pid_date, time_point, NxN):
+    all_dest_images = []
+
+    for file in all_src_images:
+        original_file_name = os.path.basename(file)
+        list_ixm_tokens = original_file_name.split('_')
+        channel = list_ixm_tokens[-1].split('.')[0].split('-')[0]
+        # print("list_ixm_tokens for the files are: ", list_ixm_tokens)
+        tile_number = montage_mapper(list_ixm_tokens, NxN)
+        new_file_name = os.path.join(output_path_expt_well, '_'.join([pid_date, list_ixm_tokens[0], time_point,
+                                                                      '0-0', list_ixm_tokens[1],
+                                                                      tile_number, channel, '0',
+                                                                      '0', '0.tif']))
+        all_dest_images.append(new_file_name)
+
+    return all_dest_images
 
 
 def copier(all_src_images, all_dest_images):
@@ -119,34 +143,11 @@ def timepoint_to_well(input_path, output_path):
     all_src_images = utils.make_filelist_wells(source_path2, 's')
     print("the all source images are: ", all_src_images)
 
-    time_point, pid_date = time_point_generator(all_src_images)
+    time_point, pid_date, NxN = time_point_generator(all_src_images)
 
     # list_all_files_base = os.path.basename(all_src_images[:])
     # print("List of all files are: ", list_all_files_base)
-
-    all_dest_images = []
-    NxN = []
-    tiles = [all_src_images[i].split('/')[-1].split('_')[2].split('s')[1] for i in range(0, len(all_src_images))]
-    tiles_int = [int(x) for x in tiles]
-    # print("The tiles are: ", tiles_int)
-    max_tile = max(tiles_int)
-    # print("max tile is: ", max_tile)
-    if max_tile == 16:
-        NxN = 4
-    elif max_tile == 9:
-        NxN = 3
-
-    for file in all_src_images:
-        original_file_name = os.path.basename(file)
-        list_ixm_tokens = original_file_name.split('_')
-        channel = list_ixm_tokens[-1].split('.')[0].split('-')[0]
-        # print("list_ixm_tokens for the files are: ", list_ixm_tokens)
-        tile_number = montage_mapper(list_ixm_tokens, NxN)
-        new_file_name = os.path.join(output_path_expt_well, '_'.join([pid_date, list_ixm_tokens[0], time_point,
-                                                                      '0-0', list_ixm_tokens[1],
-                                                                      tile_number, channel, '0',
-                                                                      '0', '0.tif']))
-        all_dest_images.append(new_file_name)
+    all_dest_images = rename_ixm(all_src_images, output_path_expt_well, pid_date, time_point, NxN)
 
     print("The new names are: ", all_dest_images)
 
