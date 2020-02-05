@@ -24,32 +24,14 @@ def path_generator(input_path, output_path):
     print("The input path is: ", input_path)
 
     for dir in os.walk(input_path, topdown=True):
-        # import pprint
-        # pprint.pprint(dir)
-        # print("We are walking in: ", dir)
-        source_path2 = [os.path.join(input_path, dir[0], fn[0]) for fn in dir[1:]
-                        if (str(fn).find('TimePoint')) > 0]
-        if source_path2:
-            # source_path2 = source_path2.pop(0)
-            print("list compression source path is: ", source_path2)
-            # break
 
         for name in dir[1:]:
             # print("the name is: ", name)
             # path = os.path.join(input_path, dir[])
             # print("The path is: ", path)
 
-            if str(name).find('TimePoint') > 0:
-                # print("the name is: ", name)
-                print("We are in: ", dir[0])
-                print (" The sub directory name is: ", name[0])
-                # path = os.path.join(input_path, dir[0], name[0])
-                # print("The path is: ", path)
-                source_path = os.path.join(input_path, dir[0], name[0])
-                # print("The path is: ", source_path)
-
             if str(name).find(".DS_Store") > 0:
-                thumb_path = os.path.join(input_path, dir[0], name[2])
+                thumb_path = os.path.join(input_path, dir[0], name[0])
                 print("thumbnail file found at:", thumb_path)
                 # list(name).pop(4)
                 # # thumb_path_abs = os.path.abspath(thumb_path)
@@ -61,13 +43,18 @@ def path_generator(input_path, output_path):
                 source_path_tif = os.path.join(input_path, dir[0], name[0])
                 # source_path2 = source_path2.pop(0)
 
-    print("The path is: ", source_path)
+    source_path2 = [os.path.join(input_path, fn[0]) for fn in os.walk(input_path, topdown=True)
+                    if (str(fn[0]).find('TimePoint')) > 0]
+    if source_path2:
+        source_path2 = source_path2.pop(0)
+        print("list compression source path is: ", source_path2)
 
-    print("list compression source path is: ", source_path2)
-    # if source_path2:
-    #     base_file_name = os.path.basename(source_path2)
-    # else:
-    #     base_file_name = os.path.basename(source_path)
+    # source_path_tif = [os.path.join(input_path, fn) for fn in os.walk(input_path, topdown=True)
+    #                    if (str(fn[-1]).find('.tif')) > 0]
+    # if source_path_tif:
+    #     source_path_tif = source_path_tif.pop(0)
+    #     print("tif file found at: ", source_path_tif)
+
     base_file_name = os.path.basename(source_path_tif)
     print("base of the file name is: ", base_file_name)
     list_ixm_tokens = base_file_name.split('_')
@@ -78,11 +65,10 @@ def path_generator(input_path, output_path):
     output_path_expt_well = os.path.join(output_path_expt, list_ixm_tokens[1])
     utils.create_dir(output_path_expt_well)
 
-    return output_path_expt_well, source_path
+    return output_path_expt_well, source_path2
 
 
 def time_point_generator(all_src_images):
-
     base_path = os.path.basename(all_src_images[0])
     print("base path is: ", base_path)
     date = str(all_src_images[0].split('/')[-4])
@@ -127,7 +113,6 @@ def rename_ixm(all_src_images, output_path_expt_well, pid_date, time_point, NxN)
 
 def copier(all_src_images, all_dest_images):
     for file in range(0, len(all_src_images)):
-
         shutil.copy(all_src_images[file], all_dest_images[file])
 
     return
