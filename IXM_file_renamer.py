@@ -32,8 +32,8 @@ def path_generator(input_path, output_path):
         # pprint.pprint(dir)
         # print("We are walking in: ", dir)
         source_path2 = [os.path.join(input_path, dir[0], fn[0]) for fn in dir[1:]
-                        if ('TimePoint' in fn)]
-        if source_path2 > []:
+                        if (str(fn).find('TimePoint')) > 0]
+        if source_path2:
             # source_path2 = source_path2.pop(0)
             print("list compression source path is: ", source_path2)
             # break
@@ -47,14 +47,13 @@ def path_generator(input_path, output_path):
                 # print("the name is: ", name)
                 print("We are in: ", dir[0])
                 print (" The sub directory name is: ", name[0])
-
-                path = os.path.join(input_path, dir[0], name[0])
-                print("The path is: ", path)
+                # path = os.path.join(input_path, dir[0], name[0])
+                # print("The path is: ", path)
                 source_path = os.path.join(input_path, dir[0], name[0])
-                print("The path is: ", source_path)
+                # print("The path is: ", source_path)
 
             if str(name).find(".DS_Store") > 0:
-                thumb_path = os.path.join(input_path, dir[0], name[4])
+                thumb_path = os.path.join(input_path, dir[0], name[2])
                 print("thumbnail file found at:", thumb_path)
                 # list(name).pop(4)
                 # # thumb_path_abs = os.path.abspath(thumb_path)
@@ -63,17 +62,43 @@ def path_generator(input_path, output_path):
             if str(name).find('.tif') > 0:
                 # str(name).find('*'+'.tif') > 0
                 print("tif file found!")
+                source_path_tif = os.path.join(input_path, dir[0], name[0])
                 # source_path2 = source_path2.pop(0)
 
-    print("list compression source path is: ", source_path)
-    original_file_name = os.path.basename(source_path)
-    list_ixm_tokens = original_file_name.split('_')
+    print("The path is: ", source_path)
+
+    print("list compression source path is: ", source_path2)
+    # if source_path2:
+    #     base_file_name = os.path.basename(source_path2)
+    # else:
+    #     base_file_name = os.path.basename(source_path)
+    base_file_name = os.path.basename(source_path_tif)
+    print("base of the file name is: ", base_file_name)
+    list_ixm_tokens = base_file_name.split('_')
+
+    print("list of ixm tokens are: ", list_ixm_tokens)
     output_path_expt = os.path.join(output_path, list_ixm_tokens[0])
     utils.create_dir(output_path_expt)
     output_path_expt_well = os.path.join(output_path_expt, list_ixm_tokens[1])
     utils.create_dir(output_path_expt_well)
 
     return output_path_expt_well, source_path
+
+
+def time_point_generator(all_src_images):
+
+    base_path = os.path.basename(all_src_images[0])
+    print("base path is: ", base_path)
+    date = str(all_src_images[0].split('/')[-4])
+    date_format = ''.join(date.split('-'))
+    print("date format is: ", date_format)
+    pid_date = 'PID' + date_format
+    # print("The experiment id is: ", PID_date)
+    # TODO: time point
+    time_point = 'T' + str(all_src_images[0].split('/')[-2]).split('_')[1]
+    print("The time point is: ", time_point)
+
+    return time_point, pid_date
 
 
 def copier(all_src_images, all_dest_images):
@@ -83,26 +108,18 @@ def copier(all_src_images, all_dest_images):
 
     return
 
+
 # A Function to convert from IXM timepoint based subfolder to well subfolder
 def timepoint_to_well(input_path, output_path):
     """    Robo0: PIDdate_ExptName_Timepoint_Hours
     -BurstIndex_Well_MontageNumber_Channel_TimeIncrement_DepthIndex_DepthIncrement.tif
     """
-    date = []
-    date_format = []
+
     output_path_expt_well, source_path2 = path_generator(input_path, output_path)
     all_src_images = utils.make_filelist_wells(source_path2, 's')
     print("the all source images are: ", all_src_images)
-    base_path = os.path.basename(all_src_images[0])
-    print("base path is: ", base_path)
-    date = str(all_src_images[0].split('/')[-4])
-    date_format = ''.join(date.split('-'))
-    print("date format is: ", date_format)
-    PID_date = 'PID' + date_format
-    # print("The experiment id is: ", PID_date)
-    # TODO: time point
-    time_point = 'T' + str(all_src_images[0].split('/')[-2]).split('_')[1]
-    print("The time point is: ", time_point)
+
+    time_point, pid_date = time_point_generator(all_src_images)
 
     # list_all_files_base = os.path.basename(all_src_images[:])
     # print("List of all files are: ", list_all_files_base)
@@ -125,16 +142,16 @@ def timepoint_to_well(input_path, output_path):
         channel = list_ixm_tokens[-1].split('.')[0].split('-')[0]
         # print("list_ixm_tokens for the files are: ", list_ixm_tokens)
         tile_number = montage_mapper(list_ixm_tokens, NxN)
-        new_file_name = os.path.join(output_path_expt_well, '_'.join([PID_date, list_ixm_tokens[0], time_point,
+        new_file_name = os.path.join(output_path_expt_well, '_'.join([pid_date, list_ixm_tokens[0], time_point,
                                                                       '0-0', list_ixm_tokens[1],
                                                                       tile_number, channel, '0',
                                                                       '0', '0.tif']))
         all_dest_images.append(new_file_name)
 
+    print("The new names are: ", all_dest_images)
+
     copier(all_src_images, all_dest_images)
-
-    print("The new name is: ", all_dest_images)
-
+    print("Copying completed!------------------------------------------------------------------")
     return
 
 
