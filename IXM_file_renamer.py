@@ -9,11 +9,10 @@ from datetime import datetime
 
 
 def montage_mapper(list_ixm_tokens, NxN):
-
     tile_number = 0
-    map3x3 = {'s1':'1', 's2':'2', 's3':'3', 's4':'6', 's5':'5', 's6':'4', 's7':'7', 's8':'8', 's9':'9'}
-    map4x4 = {'s1':'1', 's2':'2', 's3':'3', 's4':'4', 's5':'8', 's6':'7', 's7':'6', 's8':'5', 's9':'9',
-              's10':'10', 's11':'11', 's12':'12', 's13':'16', 's14':'15', 's15':'14', 's16':'13'}
+    map3x3 = {'s1': '1', 's2': '2', 's3': '3', 's4': '6', 's5': '5', 's6': '4', 's7': '7', 's8': '8', 's9': '9'}
+    map4x4 = {'s1': '1', 's2': '2', 's3': '3', 's4': '4', 's5': '8', 's6': '7', 's7': '6', 's8': '5', 's9': '9',
+              's10': '10', 's11': '11', 's12': '12', 's13': '16', 's14': '15', 's15': '14', 's16': '13'}
     if NxN == 4:
         tile_number = map4x4[list_ixm_tokens[2]]
     elif NxN == 3:
@@ -23,25 +22,37 @@ def montage_mapper(list_ixm_tokens, NxN):
 
 def path_generator(input_path, output_path):
     all_src_images = []
+    all_src_images2 = []
     output_path_expt_well = []
 
     print("The input path is: ", input_path)
+
     for dir in os.walk(input_path, topdown=True):
         # import pprint
         # pprint.pprint(dir)
         # print("We are walking in: ", dir)
+        source_path2 = [os.path.join(input_path, dir[0], fn[0]) for fn in dir[1:]
+                        if ('TimePoint' in fn)]
+        if source_path2 > []:
+            # source_path2 = source_path2.pop(0)
+            print("list compression source path is: ", source_path2)
+            # break
 
         for name in dir[1:]:
             # print("the name is: ", name)
             # path = os.path.join(input_path, dir[])
             # print("The path is: ", path)
+
             if str(name).find('TimePoint') > 0:
                 # print("the name is: ", name)
                 print("We are in: ", dir[0])
                 print (" The sub directory name is: ", name[0])
 
+                path = os.path.join(input_path, dir[0], name[0])
+                print("The path is: ", path)
                 source_path = os.path.join(input_path, dir[0], name[0])
                 print("The path is: ", source_path)
+
             if str(name).find(".DS_Store") > 0:
                 thumb_path = os.path.join(input_path, dir[0], name[4])
                 print("thumbnail file found at:", thumb_path)
@@ -52,17 +63,25 @@ def path_generator(input_path, output_path):
             if str(name).find('.tif') > 0:
                 # str(name).find('*'+'.tif') > 0
                 print("tif file found!")
-                all_src_images = utils.make_filelist_wells(source_path, 's')
+                # source_path2 = source_path2.pop(0)
 
-    original_file_name = os.path.basename(all_src_images[0])
+    print("list compression source path is: ", source_path)
+    original_file_name = os.path.basename(source_path)
     list_ixm_tokens = original_file_name.split('_')
     output_path_expt = os.path.join(output_path, list_ixm_tokens[0])
     utils.create_dir(output_path_expt)
     output_path_expt_well = os.path.join(output_path_expt, list_ixm_tokens[1])
     utils.create_dir(output_path_expt_well)
 
-    return all_src_images, output_path_expt_well
+    return output_path_expt_well, source_path
 
+
+def copier(all_src_images, all_dest_images):
+    for file in range(0, len(all_src_images)):
+
+        shutil.copy(all_src_images[file], all_dest_images[file])
+
+    return
 
 # A Function to convert from IXM timepoint based subfolder to well subfolder
 def timepoint_to_well(input_path, output_path):
@@ -71,14 +90,14 @@ def timepoint_to_well(input_path, output_path):
     """
     date = []
     date_format = []
-    all_src_images, output_path_expt_well = path_generator(input_path, output_path)
-
-    print ("the all source images are: ", all_src_images)
+    output_path_expt_well, source_path2 = path_generator(input_path, output_path)
+    all_src_images = utils.make_filelist_wells(source_path2, 's')
+    print("the all source images are: ", all_src_images)
     base_path = os.path.basename(all_src_images[0])
     print("base path is: ", base_path)
-    date = str(all_src_images[0].split('/')[-3])
+    date = str(all_src_images[0].split('/')[-4])
     date_format = ''.join(date.split('-'))
-    # print("date format is: ", date_format)
+    print("date format is: ", date_format)
     PID_date = 'PID' + date_format
     # print("The experiment id is: ", PID_date)
     # TODO: time point
@@ -111,7 +130,8 @@ def timepoint_to_well(input_path, output_path):
                                                                       tile_number, channel, '0',
                                                                       '0', '0.tif']))
         all_dest_images.append(new_file_name)
-        shutil.copy(file, new_file_name)
+
+    copier(all_src_images, all_dest_images)
 
     print("The new name is: ", all_dest_images)
 
